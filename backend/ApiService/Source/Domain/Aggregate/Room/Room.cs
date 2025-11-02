@@ -328,11 +328,74 @@ namespace Epam.ItMarathon.ApiService.Domain.Aggregate.Room
             return ValidateProperty(char.ToLowerInvariant(propertyName[0]) + propertyName[1..]);
         }
 
+        /// <summary>
+        /// Delete User from the Room.
+        /// </summary>
+        /// <param name="userId">The ID of the user to delete</param>
+        /// <param name="userCode">The code of the user who deletes and must be admin</param>
+        /// <returns>Returns <see cref="Room"/> encapsulated in <see cref="Result"/>.</returns>
+        public Result<Room, ValidationResult> DeleteUser(ulong? userId, string userCode)
+        {
+            // Check Room is not closed
+            var roomCanBeModifiedResult = CheckRoomCanBeModified();
+            if (roomCanBeModifiedResult.IsFailure)
+            {
+                return Result.Failure<Room, ValidationResult>(roomCanBeModifiedResult.Error);
+            }
+
+            var requestingUser =  Users.FirstOrDefault(user => user.AuthCode == userCode);
+            // Check Admin is in the room
+            if (requestingUser is null)
+            {
+                return Result.Failure<Room, ValidationResult>(new NotFoundError([
+                   new ValidationFailure("admin", "User with specified userCode was not found in the room.")
+               ]));
+            }
+
+            // Check Admin rights
+            if (!requestingUser.IsAdmin)
+            {
+                return Result.Failure<Room, ValidationResult>(new BadRequestError([
+                    new ValidationFailure("userCode", "User with the specified userCode is not Admin.")
+                ]));
+            }
+
+            var userToDelete = Users.FirstOrDefault(user => user.Id == userId);
+
+            // Check User is not found
+            if (userToDelete is null)
+            {
+                return Result.Failure<Room, ValidationResult>(new NotFoundError([
+                    new ValidationFailure("userId", "User with the specified Id was not found in the room.")
+                ]));
+            }
+
+            // Check Admin is not deleting themselves
+            if (requestingUser.Id == userId)
+            {
+                return Result.Failure<Room, ValidationResult>(new BadRequestError([
+                    new ValidationFailure("userId", "Admin cannot delete themselves.")
+                ]));
+            }
+
+            // Check Admin and User are in different rooms
+            if (requestingUser.RoomId != this.Id || userToDelete.RoomId != this.Id)
+            {
+                return Result.Failure<Room, ValidationResult>(new BadRequestError([
+                    new ValidationFailure("userId", "Users belong to different rooms.")
+                ]));
+            }
+
+            Users.Remove(userToDelete);
+            return this;
+        }
+
         private Result<Room, ValidationResult> ValidateProperty(string propertyName)
         {
             var validationResult = new RoomValidator().Validate(this,
                 options => options.UseCustomSelector(new MemberNameValidatorSelector([propertyName])));
             return validationResult.IsValid ? this : Result.Failure<Room, ValidationResult>(validationResult);
         }
+
     }
 }
