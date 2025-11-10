@@ -39,8 +39,10 @@ const ParticipantCard = ({
         ) : null}
 
         {isCurrentUserAdmin && !isAdmin ? (
-          <DeleteButton withoutToaster onClick={onDeleteButtonClick} />
-          <DeleteButton onClick={onDeleteButtonClick}/>
+          <>
+            <DeleteButton withoutToaster onClick={onDeleteButtonClick} />
+            <DeleteButton onClick={onDeleteButtonClick} />
+          </>
         ) : null}
 
         {!isCurrentUser && isAdmin ? (
