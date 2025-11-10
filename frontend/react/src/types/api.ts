@@ -56,9 +56,9 @@ export type UpdateRoomRequest = Partial<
     | "giftExchangeDate"
     | "giftMaximumBudget"
   >
-  >;
+>;
 
 export type DeleteParticipantRequest = {
-  userId: number,
-  userCode: string,
-}
+  userId: number;
+  userCode: string;
+};
