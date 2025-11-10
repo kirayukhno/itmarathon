@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import ParticipantCard from "@components/common/participant-card/ParticipantCard";
 import ParticipantDetailsModal from "@components/common/modals/participant-details-modal/ParticipantDetailsModal";
+import DeleteConfirmModal from "@components/common/modals/delete-confirm-modal/DeleteConfirmModal";
 import type { Participant } from "@types/api";
 import {
   MAX_PARTICIPANTS_NUMBER,
@@ -82,6 +83,11 @@ const ParticipantsList = ({ participants }: ParticipantsListProps) => {
                   ? () => handleInfoButtonClick(user)
                   : undefined
               }
+              onDeleteButtonClick={
+                userCode === admin?.userCode && userCode !== user?.userCode
+                  ? () => handleDeleteButtonClick(user)
+                  : undefined
+              }              
             />
           ))}
         </div>
